@@ -99,9 +99,7 @@ export class AppController {
       const config: AxiosRequestConfig = {
         method: 'post',
         data: req.body,
-        // baseURL: req.body.context.provider_uri,
-        //tODO: fix before submission
-        baseURL: HSPA_FALLBACK_ENDPOINT,
+        baseURL: req.body.context.provider_uri,
         headers: {
           'Content-Type': 'application/json',
         },
