@@ -69,6 +69,12 @@ export class AppController {
 
   @Post('/search')
   async search(@Req() req: Request) {
+    const context = req.body.context;
+
+    if (context.provider_uri) {
+      console.log('in provider uri');
+      return await this.callHspa(req, 'search');
+    }
     try {
       const config: AxiosRequestConfig = {
         method: 'post',
@@ -92,11 +98,12 @@ export class AppController {
     try {
       const config: AxiosRequestConfig = {
         method: 'post',
-        data: JSON.stringify(req.body),
-        baseURL: req.body.context.provider_uri,
+        data: req.body,
+        // baseURL: req.body.context.provider_uri,
+        //tODO: fix before submission
+        baseURL: HSPA_FALLBACK_ENDPOINT,
         headers: {
           'Content-Type': 'application/json',
-          'X-Gateway-Authorization': 'value',
         },
         url: path,
       };
@@ -113,11 +120,11 @@ export class AppController {
             baseURL: HSPA_FALLBACK_ENDPOINT, //as there may be hspa with unimplemented init(for hackathon), then fallback to the provided hspa uri
             headers: {
               'Content-Type': 'application/json',
-              'X-Gateway-Authorization': 'value',
             },
             url: path,
           };
           const response = await axios(config);
+
           return response.data;
         }
       }
@@ -125,11 +132,11 @@ export class AppController {
   }
   @Post('/init')
   async init(@Req() req: Request) {
-    await this.callHspa(req, 'init');
+    return await this.callHspa(req, 'init');
   }
 
   @Post('/confirm')
   async confirm(@Req() req: Request) {
-    await this.callHspa(req, 'confirm');
+    return await this.callHspa(req, 'confirm');
   }
 }
