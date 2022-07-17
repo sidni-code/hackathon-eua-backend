@@ -3,6 +3,7 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { Request } from 'express';
 import { AppGateway } from './app.gateway';
 import { AppService } from './app.service';
+import { FirebaseProviderService } from './firebase/provider.service';
 
 const UHI_ENDPOINT = 'http://121.242.73.120:8083/api/v1';
 const HSPA_FALLBACK_ENDPOINT = 'http://121.242.73.124:8084/api/v1';
@@ -12,6 +13,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly appGateway: AppGateway,
+    private readonly firebaseProvider: FirebaseProviderService,
   ) {}
 
   private logger: Logger = new Logger();
@@ -20,7 +22,7 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  callBack(req: Request) {
+  callBack(req: Request, onSuccess?: (data) => void) {
     try {
       const body = req.body;
       console.log(req.headers.location);
@@ -28,6 +30,9 @@ export class AppController {
       this.logger.log(`Message id: ${body.context.message_id}`);
       console.log(body);
       this.appGateway.server.emit(body.context.message_id, body);
+      if (onSuccess) {
+        onSuccess(body);
+      }
       return {
         message: {
           ack: {
@@ -60,7 +65,11 @@ export class AppController {
 
   @Post('/on_confirm')
   onConfirm(@Req() req: Request) {
-    this.callBack(req);
+    const onSuccess = (data) => {
+      const firestore = this.firebaseProvider.firestore;
+      firestore.collection('appointments').doc().create(data);
+    };
+    this.callBack(req, onSuccess);
   }
   @Post('/on_status')
   onStatus(@Req() req: Request) {
