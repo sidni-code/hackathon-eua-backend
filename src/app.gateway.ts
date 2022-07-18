@@ -3,16 +3,14 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsResponse,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://test-f2c9f.web.app'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -21,10 +19,10 @@ export class AppGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private logger: Logger = new Logger('AppGateway');
-  afterInit(server: Server) {
+  afterInit() {
     console.log('initialized');
   }
-  handleConnection(client: Socket, ...args: any[]) {
+  handleConnection(client: Socket) {
     this.logger.log(`client id: ${client.id}`);
   }
   handleDisconnect(client: Socket) {
@@ -32,9 +30,4 @@ export class AppGateway
   }
 
   @WebSocketServer() server: Server;
-  @SubscribeMessage('pingTest')
-  handleMessage(client: Socket, payload: any): WsResponse<string> {
-    this.logger.log('ping test');
-    return { event: 'pong', data: 'hello' };
-  }
 }
